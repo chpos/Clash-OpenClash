@@ -1,9 +1,9 @@
 payload:
   # > Apple API
   - DOMAIN-SUFFIX,aaplimg.com
-  - DOMAIN-SUFFIX.co
-  - DOMAIN-SUFFIX.com
-  - DOMAIN-SUFFIX-cloudkit.com
+  - DOMAIN-SUFFIX,apple.co
+  - DOMAIN-SUFFIX,apple.com
+  - DOMAIN-SUFFIX,apple-cloudkit.com
   - DOMAIN-SUFFIX,appsto.re
   - DOMAIN-SUFFIX,cdn-apple.com
   - DOMAIN-SUFFIX,icloud.com
@@ -22,7 +22,7 @@ payload:
   - IP-CIDR,205.180.175.0/24
 
   # > Apple News
-  - DOMAIN-SUFFIX.news
+  - DOMAIN-SUFFIX,apple.news
 
   # > Apple CDN
   - DOMAIN,aod.itunes.apple.com
