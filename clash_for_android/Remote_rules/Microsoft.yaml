@@ -9,9 +9,9 @@ payload:
   - DOMAIN-SUFFIX,live.net
   - DOMAIN-SUFFIX,livefilestore.com
   - DOMAIN-SUFFIX,mesh.com
-  - DOMAIN-SUFFIX.com
-  - DOMAIN-SUFFIXonline.com
-  - DOMAIN-SUFFIX-tst.com
+  - DOMAIN-SUFFIX,microsoft.com
+  - DOMAIN-SUFFIX,microsoftonline.com
+  - DOMAIN-SUFFIX,microsoft-tst.com
   - DOMAIN-SUFFIX,msn.com
   - DOMAIN-SUFFIX,office.com
   - DOMAIN-SUFFIX,office.net
