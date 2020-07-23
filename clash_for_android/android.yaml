@@ -1,0 +1,809 @@
+
+###### 此 Chash配置文件白话文配置教程由 chpos 在2020年7月22日编写
+###### 编写作者github: https://github.com/chpos/Clash-OpenClash
+###### 在编写过程中，获得了很多人士的帮助，使用了很多人士的教程，非常感谢！
+###### 教程使用了 lhie1的Clash规则和Dreamacro的教程，等等，感谢！
+###### 该文档中，规则和节点全部放在了远程
+
+
+
+########### 前言
+
+
+
+## clash支持 VMess, Shadowsocks, Trojan, Snell, SOCKS5 , HTTP
+
+# Proxy, Proxy Group and Rule 不在使用. 使用 proxies, proxy-groups and rules. 替代
+
+# rule-provider 不再是一个有效的关键字。请使用 rule-providers 代替
+
+# 对于ss节点（远程服务器），obfs和obfs-host不再是有效的字段。使用 plugin 和 plugin-opts 来代替
+
+# 规则中的 FINAL 不再有效。使用 MATCH 来代替
+
+# 规则中的SOURCE-IP-CIDR不再有效，使用SRC-IP-CIDR代替。使用 SRC-IP-CIDR 代替
+
+# experimental 现在已经不适用了。以前的 experimental.interface-name 现在是 interface-name
+
+Proxy --> proxies
+
+Proxy Group --> proxy-groups
+
+Rule --> rules
+
+proxy-provider --> proxy-providers
+
+rule-provider --> rule-providers
+
+Final --> Match
+
+SOURCE-IP-CIDR  --> SRC-IP-CIDR
+
+
+
+### 注意配置文件的书写格式和空格问题，一级和二级空两个空格，依次类推
+
+
+#####  配置文件正文开始
+
+
+############################################ 基本设置部分 ######################################
+
+
+
+# 本地端HTTP(S)代理服务器的端口
+port: 7890
+
+# 本地端SOCKS5代理服务器的端口
+socks-port: 7891
+
+# 适用于Linux和macOS的透明代理服务器端口
+redir-port: 7892
+
+# HTTP(S)和SOCKS5服务器在同一个端口上
+# mixed-port: 7890
+
+# 本地SOCKS5/HTTP(S)服务器的身份验证
+# authentication:    #认证
+#  - "user1:pass1"
+#  - "user2:pass2"
+
+
+
+
+# 是否允许局域网的连接（可用来共享代理） 
+
+# 设置为 "true"，允许从其他LAN IP地址连接到本地端服务器
+allow-lan: false
+
+## bind-address: '*'
+
+# 只有当 "allow-lan "设置为 "true "时，才适用
+# '*'   : 绑定所有IP地址
+# 192.168.122.11   : 绑定一个IPv4地址
+# "[aaaa::a8aa:ff:fe09:57d8]"  : 绑定一个IPv6地址
+
+
+
+
+# Clash路由模式
+
+# rule: 根据规则代理
+# global: 所有的数据包将被转发到一个单一的端点。（全局代理）
+# direct: 直接将数据包转发到Internet（全局直连)
+mode: rule
+
+
+
+
+#日志
+
+# 设置日志输出级别 (默认级别：silent，即不输出任何内容，以避免因日志内容过大而导致程序内存溢出）。
+# 日志有5 个级别：silent / info / warning / error / debug。级别越高日志输出量越大，越倾向于调试，若需要请自行开启。
+# 默认情况下，Clash会将日志打印到STDOUT。
+log-level: info
+
+
+
+
+
+# 设置为false时，解析程序不会将主机名转换为IPv6地址
+ipv6: false
+
+
+
+
+# RESTful web API监听地址
+
+# 在openwrt上，这个是节点控制页面登录地址和端口
+
+# 这就是管理节点和选择节点页面的登陆地址和端口,端口可自行设置
+
+external-controller: 127.0.0.1:9090  或 0.0.0.0:9090
+
+
+
+
+secret: "123456"
+
+# RESTful web API的密码（可选） 通过加快HTTP头 "Authorization.Bearer ${secret}"来验证
+# 如果RESTful API在0.0.0.0上监听，则总是设置一个密码
+
+
+
+
+#external-ui: folder
+
+# 配置目录的相对路径或放置一些静态Web资源的目录的绝对路径。
+# 然后Clash Core将在$$ API / ui中为其提供服务
+
+
+
+
+
+#interface-name: en0
+
+# 出站接口名称
+
+
+
+
+
+#hosts:
+  # 'mtalk.google.com': 108.177.125.188
+  # '*.clash.dev': 127.0.0.1
+  # '.dev': 127.0.0.1
+  # 'alpha.clash.dev': '::1'
+
+# 静态主机用于DNS服务器和连接的建立，只有当 `dns.enhanced-mode` 为 `redir-host` 时才有效
+# 当DNS增强模式为 redir-host 时才有效，在 fake-ip 模式下不生效
+
+# 支持通配符主机名（如*.clash.dev，*.foo.*.example.com），非通配符域名的优先级高于通配符域名
+# 例： foo.example.com > *.example.com > .example.com
+# P.S. +.foo.com equals to .foo.com and foo.com
+
+
+
+
+
+
+
+
+############################################## DNS部分 ###############################################
+ 
+
+### DNS服务器相关设置
+
+### 这一部分是可选的，当不存在时，DNS服务器将被禁用
+
+
+# Clash附带的DNS服务器旨在最大限度地减少DNS污染攻击影响，提高网络性能
+# 它有两种工作模式： redir-host 和 fake-ip  两者最大的区别在于IP地址的解析方式和连接的建立方式
+
+
+# redir-host模式
+
+# 这是比较传统的代理工作方式，在这种模式下，连接到的域会通过 dns.nameserver，dns.fallback 和 dns.fallback-filter 中的设置进行解析
+# 第一个返回的结果将被发回给客户端，客户端就可以通过Clash与返回的IP地址建立连接
+
+
+# fake-ip模式
+
+# 以 “假IP” 地址用作查找相应“FQDN”信息的密钥    FQDN是完整域名
+
+# 当向DNS服务器发送DNS请求时，Clash会在 fake-ip CIDR(假IP地址池)中分配一个空闲的假IP地址
+# FQDN和 "假IP "地址之间的映射由一个映射表管理
+
+# 需要注意的是，假IP地址池中的IP地址不应该在真实通信中使用， 池子的默认CIDR是一个保留的IPv4地址空间198.18.0.1/16
+# 可以在 dns 部分中的 fake-ip-range 中进行更改
+
+# 然后，Clash会查找FQDN，并检查IP地址的GEOIP，这仅仅是为了匹配规则（比如GEOIP），当向Clash发出对所述 "假IP "地址的请求时，
+# Clash会通过SOCKS5、Shadowsocks（或其他协议）服务器与 "假IP "链接的FQDN建立连接
+
+
+
+dns:
+
+  enable: true
+  listen: 0.0.0.0:53
+  # ipv6: false      # 当为 "false "时，对AAAA请求的回答为空。
+
+
+
+  # 这些名称服务器用于解析下面的DNS名称服务器主机名
+  # 只指定IP地址（意思好像是，只能在下面填写IP地址）
+  default-nameserver:
+    - 114.114.114.114
+    - 8.8.8.8
+
+
+
+  enhanced-mode: fake-ip         # or redir-host       选择DNS的增强模式
+
+  fake-ip-range: 198.18.0.1/16   # 如果选择fake-ip模式，这个就是 Fake-IP 的地址池CIDR范围
+  
+
+
+  # fake-ip 白名单列表，此列表中的主机名不会使用假IP解析，也就是说，对这些域名的请求总是用其真实的IP地址来回答
+
+  fake-ip-filter:
+    - '*.lan'
+    #- localhost.ptlogin2.qq.com
+  
+
+
+
+  # 支持UDP，TCP，DoT，DoH  您可以 指定 要连接的 端口 ，所有DNS请求都直接发送到 NameServer，不需要代理
+  # Clash用收集到的第一个结果响应DNS请求
+
+  nameserver:
+    - 119.29.29.29
+    - 223.5.5.5
+    - 114.114.114.114
+  # - tls://dns.rubyfish.cn:853
+
+
+  # 当存在 "fallback "时， fallback 服务器将与 "nameservers " 中的服务器同时并发请求
+  # 当GEOIP国家不是 "CN "时，将使用fallback服务器的回答
+
+  fallback:
+    - tls://dns.rubyfish.cn:853  # DNS over TLS      DoT
+    - https://1.1.1.1/dns-query  # DNS over HTTPS    Doh
+    - tls://1.0.0.1:853
+    - tls://dns.google:853
+
+
+
+  # 如果用 "nameservers "中的服务器解析的IP地址在下面指定的子网中，则视为无效，而使用 "fallback "服务器的结果
+
+  # 当 fallback-filter 中的geoip为 true 且IP地址的GEOIP为 "CN "时，使用 "nameserver "中服务器解析的IP地址
+
+  # 如果 fallback-filter 中的geoip为 false，则总是使用 "fallback "的结果，而放弃 "nameservers "的结果
+
+  # 这是针对DNS污染攻击的一种对策
+
+  fallback-filter:
+    geoip: true
+    ipcidr:  
+      - 240.0.0.0/4    ## 在这个网段内的 IP 地址会被考虑为被污染的 IP
+
+
+#### clash DNS 请求逻辑：
+
+# 当访问一个域名时， nameserver 与 fallback 列表内的所有服务器并发请求，得到域名对应的 IP 地址
+# clash 将选取 nameserver 列表内，解析最快的结果
+# 若解析结果中，IP 地址属于 国外，那么 clash 将选择 fallback 列表内，解析最快的结果
+# 因此，应该在 nameserver 和 fallback 内都放置了无污染、解析速度较快的DNS 服务器，以达到最快的解析速度
+# 但是 fallback 列表内服务器会用在解析境外网站，为了结果绝对无污染，建议仅保留了支持 DoT/DoH 的两个服务器
+
+#### clash DNS 配置注意事项：
+
+# 如果您为了确保 DNS 解析结果无污染，请仅保留列表内以 tls:// 或 https:// 开头的 DNS 服务器，但是通常对于国内域名没有必要
+# 如果您不在乎可能解析到污染的结果，更加追求速度。请将 nameserver 列表的服务器插入至 fallback 列表内，并移除重复项
+
+
+
+
+
+
+############################################ 节点部分 ##############################################
+
+
+#### 自建，本地节点部分
+
+## 下面是节点添加的示例部分，请根据实际情况选择对应的类型和设置对应的参数
+
+# 支持VMess, Shadowsocks, Snell, Trojan, SOCKS5 , HTTP
+# proxies 即以前的 proxy 现在已经取消
+# 请在 proxies 中 填写自己的自建节点
+
+proxies:     
+  # Shadowsocks
+  #  支持的加密类型:
+  #   aes-128-gcm aes-192-gcm aes-256-gcm
+  #   aes-128-cfb aes-192-cfb aes-256-cfb
+  #   aes-128-ctr aes-192-ctr aes-256-ctr
+  #   rc4-md5 chacha20-ietf xchacha20
+  #   chacha20-ietf-poly1305 xchacha20-ietf-poly1305
+  - name: "ss1"
+    type: ss
+    server: server
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "password"
+    # udp: true
+
+  - name: "ss2"
+    type: ss
+    server: server
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "password"
+    plugin: obfs
+    plugin-opts:
+      mode: tls # or http
+      # host: bing.com
+
+  - name: "ss3"
+    type: ss
+    server: server
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "password"
+    plugin: v2ray-plugin
+    plugin-opts:
+      mode: websocket # no QUIC now
+      # tls: true # wss
+      # skip-cert-verify: true
+      # host: bing.com
+      # path: "/"
+      # mux: true
+      # headers:
+      #   custom: value
+
+  # vmess
+  # cipher support auto/aes-128-gcm/chacha20-poly1305/none
+  - name: "vmess"
+    type: vmess
+    server: server
+    port: 443
+    uuid: uuid
+    alterId: 32
+    cipher: auto
+    # udp: true
+    # tls: true
+    # skip-cert-verify: true
+    # servername: example.com # priority over wss host
+    # network: ws
+    # ws-path: /path
+    # ws-headers:
+    #   Host: v2ray.com
+  
+  - name: "vmess-http"
+    type: vmess
+    server: server
+    port: 443
+    uuid: uuid
+    alterId: 32
+    cipher: auto
+    # udp: true
+    # network: http
+    # http-opts:
+    #   # method: "GET"
+    #   # path:
+    #   #   - '/'
+    #   #   - '/video'
+    #   # headers:
+    #   #   Connection:
+    #   #     - keep-alive
+
+  # socks5
+  - name: "socks"
+    type: socks5
+    server: server
+    port: 443
+    # username: username
+    # password: password
+    # tls: true
+    # skip-cert-verify: true
+    # udp: true
+
+  # http
+  - name: "http"
+    type: http
+    server: server
+    port: 443
+    # username: username
+    # password: password
+    # tls: true # https
+    # skip-cert-verify: true
+
+  # Snell
+  # Beware that there's currently no UDP support yet
+  - name: "snell"
+    type: snell
+    server: server
+    port: 44046
+    psk: yourpsk
+    # obfs-opts:
+      # mode: http # or tls
+      # host: bing.com
+
+  # Trojan
+  - name: "trojan"
+    type: trojan
+    server: server
+    port: 443
+    password: yourpsk
+    # udp: true
+    # sni: example.com # aka server name     ### 中转节点请指定 sni
+    # alpn:
+    #   - h2
+    #   - http/1.1
+    # skip-cert-verify: true
+
+
+
+
+
+
+
+
+########################################### 策略组部分 #############################################
+
+
+
+## 策略组
+
+## 即以前的 Proxy Group
+
+proxy-groups:   
+
+# 代理组是一组代理，您可以利用Clash的某些特殊功能来管理和使用
+
+#### 策略组的几种模式简介：
+
+# relay(中继)： 发送到此代理组的请求将随后通过指定的代理服务器进行中继。 目前尚无UDP支持。 指定的代理服务器不应包含其他中继
+
+# url-test： Clash通过定期向指定的URL发送HTTP HEAD请求，对列表中的每个代理服务器进行基准测试
+# 可以设置最大误差值、基准测试间隔和目标URL
+
+# fallback： Clash周期性地测试列表中服务器的可用性，机制与url-test相同。将使用第一个可用的服务器
+
+# load-balance： 对同一eTLD的请求将使用相同的代理服务器进行拨号
+
+# select： 默认情况下，启动Clash时使用第一台服务器。 用户可以选择要与RESTful API一起使用的服务器
+# 在此模式下，您可以在配置中对服务器进行硬编码或使用代理提供程序
+
+
+###    PROXY，MATCH 这两个策略组必须设置
+
+
+  # 中继（relay)代理：代理不得包含中继。不支持UDP
+  # 流量走向： Clash <-> http <-> vmess <-> ss1 <-> ss2 <-> 互联网
+  - name: "relay"
+    type: relay
+    proxies:
+      - http
+      - vmess
+      - ss1
+      - ss2
+
+
+
+  # url-test通过对URL进行基准测试来选择将使用哪个代理，选择延时最低的自动使用
+  - name: "自动选择"
+    type: url-test
+    use:
+      - jc1
+      - jc2
+    proxies:
+      - ss1
+      - ss2
+      - vmess1
+    # tolerance: 150   # 允许的延迟误差，单位应该是毫秒
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300      # 更新间隔，单位秒
+
+
+
+  # fallback 按优先级选择一个可用的策略，节点按照顺序排序，通过url测试，选择第一个可用的节点首先使用
+  # 当 1 故障不可用时自动切换到 2 以此类推，使用此模式，请将自己最快的服务器按照顺序排序
+    type: "fallback"
+    proxies:
+      - ss1
+      - ss2
+      - vmess1
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+
+
+
+  # load-balance（负载均衡）: 同一eTLD的请求将在同一代理服务器上拨号
+  - name: "load-balance"
+    type: load-balance
+    proxies:
+      - ss1
+      - ss2
+      - vmess1
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+
+
+
+  # select： 手动给策略组选择代理节点
+  # 可以使用RESTful API切换代理节点，建议在GUI中使用   GUI是图形用户界面
+
+  - name: "Youtube"
+    type: select
+    use:
+      - jc1
+    proxies:
+      - Proxy
+      - DIRECT
+      - REJECT
+      - fallback
+      - auto
+      - load-balance
+
+
+
+  - name: "Telegram"
+    type: select
+    use:
+      - jc1
+      - jc2
+    proxies:
+      - DIRECT
+      - DIRECT
+
+
+  - name: "Telegram"
+    type: url-test
+    use:
+      - jc1
+      - jc2
+    proxies:
+      - DIRECT
+      - DIRECT
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300 
+
+
+
+  - name: "GlobalTV"
+    type: select
+    use:
+      - jc2
+    proxies:
+      - Proxy
+      - DIRECT
+      - Telegram
+
+
+  - name: "Proxy"
+    type: select
+    proxies:
+      - ss1
+      - ss2
+      - vmess1
+      - 自动选择
+
+
+
+  - name: "MATCH"
+    type: select
+    use:
+      - jc2
+    proxies:
+      - Proxy
+      - DIRECT
+
+
+
+
+
+
+
+
+############################################## 机场节点订阅部分 #################################
+
+
+### proxy-providers 机场订阅部分
+
+
+# 代理订阅给用户提供了动态加载代理服务器列表的能力，而不是在配置文件中硬编写，目前有两个来源供代理订阅加载服务器列表
+
+# http:  Clash在启动时从指定的URL加载服务器列表。如果设置了更新间隔，Clash会定期从远程拉取服务器列表
+
+# file： Clash在启动时从文件系统的指定位置加载服务器列表
+
+# 健康检查在两种模式下都可以使用，其工作原理与Proxy Groups中的fallback完全相同
+# 在主配置文件中，服务器列表文件的配置格式也是完全相同的
+
+
+proxy-providers:   
+
+
+
+  jc1:                 #机场名字，填写英文
+    type: http
+    url: "url"         #填写地址，使用转换网站转换为 Node List 模式
+    interval: 3600     #更新间隔，单位秒
+    path: ./provider1.yaml  
+    health-check:      #节点健康检查，测试节点是否可用，可用的话，将会测试出延迟
+      enable: true
+      interval: 600
+      url: http://www.gstatic.com/generate_204
+
+  jc2:
+    type: file
+    path: /test.yaml
+    health-check:
+      enable: true
+      interval: 36000
+      url: http://www.gstatic.com/generate_204
+
+
+
+
+
+
+
+
+
+
+####################################################### 规则部分 ##################################################
+
+
+
+### 规则支持的前缀类型
+
+# - DOMAIN-SUFFIX   按域名后缀匹配
+
+# - DOMAIN-KEYWORD  按域名关键字匹配
+
+# - DOMAIN          按域名匹配
+
+# - IP-CIDR         按IP地址池匹配 
+
+# - IP-CIDR6        IPV6地址池匹配
+
+# - SRC-IP-CIDR 
+# SRC-IP-CIDR,192.168.1.201/32,DIRECT  将任何来自192.168.1.201/32的数据包路由到DIRECT策略
+
+# SRC-PORT 
+# SRC-PORT,80,policy        将任何来自端口80的数据包路由到策略
+
+# DST-PORT
+# DST-PORT,80,policy        将任何发送到80端口的数据包发送给策略
+
+# MATCH
+# MATCH,policy              将其余的数据包路由到policy  这个规则是必须的
+
+
+# 另外还有两个特殊策略
+
+# DIRECT：直接连接到目标，不涉及任何代理
+
+# REJECT：数据包的黑洞。Clash将不会处理这个策略的任何I/O
+
+# 一个策略可以是DIRECT、REJECT、代理组或代理服务器
+
+# no-resolve 
+# no-resolve是 GEOIP、IP-CIDR 或 IP-CIDR6 规则的附加选项  在这些规则中添加 no-resolve 即可启用
+# Clash在遇到IP规则时，默认情况下会将域名翻译成IP地址。当遇到有FQDN目标的数据包时，Clash会跳过启用此选项的IP规则
+
+
+
+
+
+#### 远程规则订阅部分
+
+
+rule-providers:
+
+# name:         # 规则名称
+#   type:       # http 或 file 两种
+#   behavior:   # classical，ipcidr，domain 三种
+#   path:       # 文件路径
+#   url:        # 只有当类型为 HTTP 时才可用，您不需要在本地空间中创建新文件。填写远程规则地址
+#   interval:   # 自动更新间隔，仅在类型为 HTTP 时可用，单位秒
+
+
+#下面为示例，注意书写格式和空格，一级和二级空两个空格，依次类推
+
+  Telegram:
+    type: http
+    behavior: classical
+    path: ./Remote_rules/telegram.yaml
+    url: https://raw.githubusercontent.com/chpos/Clash-OpenClash/master/clash_for_android/Remote_rules/telegram.yaml
+    interval: 86400
+
+  GlobalTV:
+    type: http
+    behavior: classical
+    path: ./Remote_rules/GlobalTV.yaml
+    url: https://raw.githubusercontent.com/chpos/Clash-OpenClash/master/clash_for_android/Remote_rules/GlobalTV.yaml
+    interval: 86400
+
+  Spotify:
+    type: http
+    behavior: classical
+    path: ./Remote_rules/Spotify.yaml
+    url: https://raw.githubusercontent.com/chpos/Clash-OpenClash/master/clash_for_android/Remote_rules/Spotify.yaml
+    interval: 86400
+
+
+# 三种behavior types区别：
+
+#  domain
+
+# payload:
+#   - '.blogger.com'
+#   - '*.*.microsoft.com'
+#   - 'books.itunes.apple.com'
+
+
+#  ipcidr
+
+# payload:
+#   - '192.168.1.0/24'
+#   - '10.0.0.0.1/32'
+
+
+#  classical
+
+# payload:
+#   - DOMAIN-SUFFIX,google.com
+#   - DOMAIN-KEYWORD,google
+#   - DOMAIN,ad.com
+#   - SRC-IP-CIDR,192.168.1.201/32
+#   - IP-CIDR,127.0.0.0/8
+#   - GEOIP,CN
+#   - DST-PORT,80
+#   - SRC-PORT,7777
+#   MATCH is not necessary here
+
+
+
+
+
+######################################  本地rules部分  ####################################################
+
+
+### 下面的 - RULE-SET 的顺序，决定了你的规则先后顺序，优先匹配靠前的规则，从上向下匹配
+
+### 例： proxy 和 telegram 都可以代理电报，如果 proxy 在 telegram 之前，则，telegram 规则不生效
+ 
+### 你在 rule-providers 中设置了多少条远程规则，则下面应分别创建对应的 - RULE-SET ，如果在 - RULE-SET 中将规则设置为
+
+### DIRECT，REJECT，则无需在 proxy-groups 创建对应的策略组，否则需要在 proxy-groups 中创建对应规则名称的代理策略组
+
+### 然后在代理策略组里设置节点，这样就形成，对应规则走对应的节点，可以在日志查看记录检验
+
+### 如果在 - RULE-SET 中设置的有PROXY和 MATCH，需要在 proxy-groups 创建对应策略组
+
+### 如果在 rule-providers 中设置了规则，而在 rules: 中没有设置对应的 - RULE-SET ，则规则不生效
+
+
+
+rules:
+
+###示例
+
+# - RULE-SET,  规则名称， 你给规则起的策略组名或者规则走什么策略组
+
+#  - RULE-SET,  Telegram,           Telegram
+
+
+  # Telegram
+  - RULE-SET,Telegram,DIRECT
+
+  # Spotify
+  - RULE-SET,Spotify,Spotify
+ 
+  # GlobalTV
+  - RULE-SET,GlobalTV,PROXY
+
+  # GlobalTV
+  - RULE-SET,GlobalTV,REJECT
+
+
+### 还可以在本地直接加一些规则
+
+  # Local Area Network
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,100.64.0.0/10,DIRECT
+  - IP-CIDR,224.0.0.0/4,DIRECT
+
+### 这两个规则一般是最后匹配，需要设置
+
+  - GEOIP,CN,DIRECT
+  #- GEOIP,CN,Domestic
+
+  - MATCH,MATCH
+  # - MATCH,Others
