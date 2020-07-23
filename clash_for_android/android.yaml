@@ -213,7 +213,7 @@ dns:
   # 这些名称服务器用于解析下面的DNS名称服务器主机名
   # 只指定IP地址（意思好像是，只能在下面填写IP地址）
   default-nameserver:
-    - 114.114.114.114
+    - 119.29.29.29
     - 8.8.8.8
 
 
@@ -458,9 +458,12 @@ proxy-groups:
 
 ###    PROXY，MATCH 这两个策略组必须设置
 
+###    策略组的 name 根据规则自定义，但是 type 不能乱改
+
 
   # 中继（relay)代理：代理不得包含中继。不支持UDP
   # 流量走向： Clash <-> http <-> vmess <-> ss1 <-> ss2 <-> 互联网
+
   - name: "relay"
     type: relay
     proxies:
@@ -469,18 +472,26 @@ proxy-groups:
       - ss1
       - ss2
 
+  - name: "中继的名字"
+    type: relay
+    proxies:
+      - 节点一
+      - 节点二
+      - 节点三
+      - 节点四
 
 
   # url-test通过对URL进行基准测试来选择将使用哪个代理，选择延时最低的自动使用
-  - name: "自动选择"
+
+  - name: "自动选择（自己起名）"
     type: url-test
     use:
-      - jc1
-      - jc2
+      - 机场一
+      - 机场二
     proxies:
-      - ss1
-      - ss2
-      - vmess1
+      - 节点一
+      - 节点二
+      - 节点三
     # tolerance: 150   # 允许的延迟误差，单位应该是毫秒
     url: 'http://www.gstatic.com/generate_204'
     interval: 300      # 更新间隔，单位秒
@@ -489,23 +500,32 @@ proxy-groups:
 
   # fallback 按优先级选择一个可用的策略，节点按照顺序排序，通过url测试，选择第一个可用的节点首先使用
   # 当 1 故障不可用时自动切换到 2 以此类推，使用此模式，请将自己最快的服务器按照顺序排序
+
+  - name: "Fallback（自己起名）"
     type: "fallback"
+    use:
+      - 机场一
+      - 机场二
     proxies:
-      - ss1
-      - ss2
-      - vmess1
+      - 节点一
+      - 节点二
+      - 节点三
     url: 'http://www.gstatic.com/generate_204'
     interval: 300
 
 
 
   # load-balance（负载均衡）: 同一eTLD的请求将在同一代理服务器上拨号
-  - name: "load-balance"
+
+  - name: "load-balance（自己起名）"
     type: load-balance
+    use:
+      - 机场一
+      - 机场二
     proxies:
-      - ss1
-      - ss2
-      - vmess1
+      - 节点一
+      - 节点二
+      - 节点三
     url: 'http://www.gstatic.com/generate_204'
     interval: 300
 
@@ -517,67 +537,91 @@ proxy-groups:
   - name: "Youtube"
     type: select
     use:
-      - jc1
+      - 机场一
+      - 机场二
     proxies:
       - Proxy
       - DIRECT
       - REJECT
       - fallback
-      - auto
+      - 自动选择
       - load-balance
+      - Telegram
+      - Youtube
+      - 节点一
+      - 节点二
 
-
-
-  - name: "Telegram"
-    type: select
-    use:
-      - jc1
-      - jc2
-    proxies:
-      - DIRECT
-      - DIRECT
 
 
   - name: "Telegram"
     type: url-test
     use:
-      - jc1
-      - jc2
+      - 机场一
+      - 机场二
     proxies:
-      - DIRECT
-      - DIRECT
+      - 节点一
+      - 节点二
+      - 节点三
+
+
+  - name: "Telegram"
+    type: fallback
+    use:
+      - 机场一
+      - 机场二
+    proxies:
+      - 节点一
+      - 节点二
     url: 'http://www.gstatic.com/generate_204'
     interval: 300 
 
 
 
   - name: "GlobalTV"
+    type: load-balance
+    use:
+      - 机场一
+      - 机场二
+    proxies:
+      - 节点一
+      - 节点二
+
+
+  - name: "GlobalTV"
     type: select
     use:
-      - jc2
+      - 机场一
+      - 机场二
     proxies:
-      - Proxy
-      - DIRECT
-      - Telegram
+      - 节点一
+      - 节点二
+      - telegram
+      - Youtube
+      - load-balance
+      - fallback
+      - url-test
 
 
   - name: "Proxy"
     type: select
+    use:
+      - 机场一
+      - 机场二
     proxies:
-      - ss1
-      - ss2
-      - vmess1
-      - 自动选择
+      - 节点一
+      - 节点二
+      - Youtube
+      - url-test
+      - fallback
 
 
 
   - name: "MATCH"
     type: select
-    use:
-      - jc2
     proxies:
       - Proxy
       - DIRECT
+      - 节点一
 
 
 
@@ -606,17 +650,17 @@ proxy-providers:
 
 
 
-  jc1:                 #机场名字，填写英文
+  机场1:                #机场名字，填写英文
     type: http
-    url: "url"         #填写地址，使用转换网站转换为 Node List 模式
-    interval: 3600     #更新间隔，单位秒
+    url: "url"         #Clash目前不支持机场链接直接订阅，需要使用第三方API进行转换
+    interval: 3600     #更新间隔，Android Clash单位是分，Windows Clash单位是小时
     path: ./provider1.yaml  
     health-check:      #节点健康检查，测试节点是否可用，可用的话，将会测试出延迟
       enable: true
       interval: 600
       url: http://www.gstatic.com/generate_204
 
-  jc2:
+  机场2:
     type: file
     path: /test.yaml
     health-check:
